@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '@sweetalert2/themes/dark/dark.css';
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+
+@layer base {
+  @font-face {
+    font-family: "Eco Coding WGL4 W01 Regular";
+    src: url("https://db.onlinewebfonts.com/t/fce1ae337c2b8b2bf2518b7d5127e030.eot");
+    src: url("https://db.onlinewebfonts.com/t/fce1ae337c2b8b2bf2518b7d5127e030.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/fce1ae337c2b8b2bf2518b7d5127e030.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/fce1ae337c2b8b2bf2518b7d5127e030.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/fce1ae337c2b8b2bf2518b7d5127e030.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/fce1ae337c2b8b2bf2518b7d5127e030.svg#Eco Coding WGL4 W01 Regular")format("svg");
+}
+}
