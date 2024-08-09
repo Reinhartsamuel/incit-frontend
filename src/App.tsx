@@ -7,7 +7,7 @@ import AuthRouter from './routes/AuthRouter';
 import MainRouter from './routes/MainRouter';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Swal from 'sweetalert2'
+// import Swal from 'sweetalert2'
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ function App() {
             if (user?.email_verified) {
               setUser(user);
             } else {
-              Swal.fire({icon:'warning',text:'email not verified'});
+              // Swal.fire({icon:'warning',text:'email not verified'});
               auth.signOut();
             }
           });
