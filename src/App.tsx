@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import './App.css';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import {
+  browserSessionPersistence,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithEmailAndPassword,
+  User,
+} from 'firebase/auth';
 import { auth } from './config/firebase';
 import AuthRouter from './routes/AuthRouter';
 import MainRouter from './routes/MainRouter';
@@ -16,7 +22,7 @@ function App() {
       if (user) {
         axios
           .get(
-            `https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${user.uid}`,
+            `https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${user.uid}`
           )
           .then((response) => {
             // console.log(response.data);
@@ -35,12 +41,15 @@ function App() {
         setUser(null);
       }
     });
+
+    setPersistence(auth, browserSessionPersistence)
+      .then(() => {
+        const email = localStorage.getItem('email') || '';
+        const password = localStorage.getItem('password') || '';
+        return signInWithEmailAndPassword(auth, email, password);
+      })
   }, []);
-  return (
-    <>
-      {user ? <MainRouter /> : <AuthRouter />}
-    </>
-  );
+  return <>{user ? <MainRouter /> : <AuthRouter />}</>;
 }
 
 export default App;

@@ -8,6 +8,9 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { useSearchParams } from 'react-router-dom';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+import moment from 'moment';
 
 interface LoginInfo {
   email: string;
@@ -19,38 +22,41 @@ const LoginPage = () => {
   const customToken = searchParams.get('token');
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState<LoginInfo>({ email: '', password: '' });
-  const [alert, setAlert] = useState({
-    message: '',
-    status: '',
-  });
+
 
   const handleLogin = async () => {
     setLoading(true);
-    setAlert({
-      message: '',
-      status: '',
-    });
+
   };
   const handleLoginEmail = async () => {
     try {
-      signInWithEmailAndPassword(auth, info.email, info.password)
-        .then((user) => {
-          console.log(user, 'this is user');
-          auth.currentUser?.getIdToken(true).then((idToken) => {
-            console.log(idToken, 'this is id token');
-          });
-        })
-        .catch((error) => {
-          console.log(error.message);
-        });
+      const { email , password } = info;
+      localStorage.setItem('email', email);
+      localStorage.setItem('password', password);
+      const userCredential = await  signInWithEmailAndPassword(auth, email, password);
+
+
+      // get user data from sql
+      const {data : userSql} = await axios.get(`https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${userCredential?.user?.uid}`);
+      localStorage.setItem('userSql', JSON.stringify(userSql?.data[0]));
+
+      // update user data
+       await axios.put(`https://striking-illumination-production.up.railway.app/users/update/${userSql?.data[0]?.id}`, {
+        last_login : moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        number_of_login : userSql?.data[0]?.number_of_login ? userSql?.data[0]?.number_of_login + 1 : 1
+      });
     } catch (error: any) {
       window.alert(error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error.message,
+      })
     }
   };
 
   const handleLoginCustomToken = async () => {
     if (!customToken) return;
-    console.log('signing using token....');
     signInWithCustomToken(auth, customToken)
       .then((userCredential) => {
         // Signed in
@@ -171,27 +177,6 @@ const LoginPage = () => {
           </button>
         </div>
       </div>
-      {alert?.message && (
-        <div
-          className='flex items-center p-4 m-4 text-sm text-blue-800 rounded-lg bg-blue-50 absolute transition ease-in-out'
-          role='alert'
-        >
-          <svg
-            className='flex-shrink-0 inline w-4 h-4 me-3'
-            aria-hidden='true'
-            xmlns='http://www.w3.org/2000/svg'
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z' />
-          </svg>
-          <span className='sr-only'>Info</span>
-          <div>
-            <span className='font-medium'>Info alert!</span> Change a few things
-            up and try submitting again.
-          </div>
-        </div>
-      )}
     </div>
   );
 };
