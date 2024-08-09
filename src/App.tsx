@@ -20,7 +20,8 @@ function App() {
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        axios
+        setTimeout(() => {
+          axios
           .get(
             `https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${user.uid}`
           )
@@ -36,6 +37,7 @@ function App() {
               auth.signOut();
             }
           });
+        }, 3000);
         navigate('/');
       } else {
         setUser(null);

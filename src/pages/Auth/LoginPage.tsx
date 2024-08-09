@@ -75,8 +75,9 @@ const LoginPage = () => {
       const user = result?.user;
 
       const {data} = await axios.get(`https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${user?.uid}`);
+      console.log(data, 'data');
       const findExistingUser = data?.data;
-      if(findExistingUser?.length > 0) {
+      if(findExistingUser?.length === 0) {
         // send new data to sql
         const newData = {
           first_name: user?.displayName?.split(' ')[0] || user?.displayName,
@@ -84,10 +85,12 @@ const LoginPage = () => {
           email: user?.email || '',
           firebase_uid: user?.uid || '',
           email_verified: true,
-          number_of_login: 1
+          number_of_login: 1,
+          last_login :moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
         };
         const sendToSql = await axios.post('https://striking-illumination-production.up.railway.app/users/create', newData);
         console.log(sendToSql.data, 'sendToSql.data!!!!!');
+        localStorage.setItem('userSql', JSON.stringify(sendToSql?.data?.data));
       } else {
         // update last login sql
         await updateUserData(data);
