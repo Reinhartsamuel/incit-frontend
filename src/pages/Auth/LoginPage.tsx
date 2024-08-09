@@ -3,19 +3,31 @@ import { useEffect, useState } from 'react';
 import { cn } from '../../utils/cn';
 import Spinner from '../../components/Spinner';
 import {
+  FacebookAuthProvider,
+  GoogleAuthProvider,
   signInWithCustomToken,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import Swal from 'sweetalert2';
+// import Swal from 'sweetalert2';
 import moment from 'moment';
+import Swal from 'sweetalert2';
 
 interface LoginInfo {
   email: string;
   password: string;
-}
+};
+
+
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+
+
+
+
 
 const LoginPage = () => {
   const [searchParams] = useSearchParams();
@@ -24,10 +36,13 @@ const LoginPage = () => {
   const [info, setInfo] = useState<LoginInfo>({ email: '', password: '' });
 
 
-  const handleLogin = async () => {
-    setLoading(true);
-
-  };
+  const updateUserData = async (userSql:any) => {
+          // update user data
+          await axios.put(`https://striking-illumination-production.up.railway.app/users/update/${userSql?.data[0]?.id}`, {
+            last_login : moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+            number_of_login : userSql?.data[0]?.number_of_login ? userSql?.data[0]?.number_of_login + 1 : 1
+          });
+  }
   const handleLoginEmail = async () => {
     try {
       const { email , password } = info;
@@ -40,11 +55,8 @@ const LoginPage = () => {
       const {data : userSql} = await axios.get(`https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${userCredential?.user?.uid}`);
       localStorage.setItem('userSql', JSON.stringify(userSql?.data[0]));
 
-      // update user data
-       await axios.put(`https://striking-illumination-production.up.railway.app/users/update/${userSql?.data[0]?.id}`, {
-        last_login : moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-        number_of_login : userSql?.data[0]?.number_of_login ? userSql?.data[0]?.number_of_login + 1 : 1
-      });
+
+      await updateUserData(userSql);
     } catch (error: any) {
       window.alert(error.message);
       Swal.fire({
@@ -54,6 +66,59 @@ const LoginPage = () => {
       })
     }
   };
+
+
+  const handleLoginGoogle = async () => {
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log(result, 'result');
+      const user = result?.user;
+
+      const {data} = await axios.get(`https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${user?.uid}`);
+      const findExistingUser = data?.data;
+      if(findExistingUser?.length > 0) {
+        // send new data to sql
+        const newData = {
+          first_name: user?.displayName?.split(' ')[0] || user?.displayName,
+          last_name: user?.displayName?.split(' ')[1] || '-',
+          email: user?.email || '',
+          firebase_uid: user?.uid || '',
+          email_verified: true,
+          number_of_login: 1
+        };
+        const sendToSql = await axios.post('https://striking-illumination-production.up.railway.app/users/create', newData);
+        console.log(sendToSql.data, 'sendToSql.data!!!!!');
+      } else {
+        // update last login sql
+        await updateUserData(data);
+      }
+    } catch (error : Error | any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error.message,
+      })
+      console.error(error.message, ':::this is error login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginFacebook = async () => {
+    try {
+      const result = await signInWithPopup(auth, facebookProvider);
+      console.log(result, 'result');
+      const user = result?.user;
+    } catch(error : Error | any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error.message,
+      })
+      console.error(error.message, ':::this is error login');
+    }
+  }
 
   const handleLoginCustomToken = async () => {
     if (!customToken) return;
@@ -138,7 +203,7 @@ const LoginPage = () => {
               !loading && 'shadow-xl'
             }`}
             disabled={loading}
-            onClick={() => handleLogin()}
+            onClick={() => handleLoginGoogle()}
           >
             {loading ? (
               <Spinner />
@@ -159,7 +224,7 @@ const LoginPage = () => {
               !loading && 'shadow-xl'
             }`}
             disabled={loading}
-            onClick={() => handleLogin()}
+            onClick={() => handleLoginFacebook()}
           >
             {loading ? (
               <Spinner />
