@@ -110,6 +110,24 @@ const LoginPage = () => {
       const result = await signInWithPopup(auth, facebookProvider);
       console.log(result, 'result');
       const user = result?.user;
+      const {data} = await axios.get(`https://striking-illumination-production.up.railway.app/users/query?firebase_uid=${user?.uid}`);
+      const findExistingUser = data?.data;
+      if(findExistingUser?.length > 0) {
+        // send new data to sql
+        const newData = {
+          first_name: user?.displayName?.split(' ')[0] || user?.displayName,
+          last_name: user?.displayName?.split(' ')[1] || '-',
+          email: user?.email || '',
+          firebase_uid: user?.uid || '',
+          email_verified: true,
+          number_of_login: 1
+        };
+        const sendToSql = await axios.post('https://striking-illumination-production.up.railway.app/users/create', newData);
+        console.log(sendToSql.data, 'sendToSql.data!!!!!');
+      } else {
+        // update last login sql
+        await updateUserData(data);
+      }
     } catch(error : Error | any) {
       Swal.fire({
         icon: 'error',
