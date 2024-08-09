@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import axios from 'axios';
 import { useState } from 'react';
+import Swal from 'sweetalert2';
+import Spinner from '../../components/Spinner';
 
 const ProfilePage = () => {
   const [data, setData] = useState<any>({});
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const userDataSql = JSON.parse(
     localStorage.getItem('userSql') || '{"name":""}'
   );
@@ -12,6 +16,32 @@ const ProfilePage = () => {
     if (userDataSql[key] !== data[key]) return setIsEditing(true)
       setIsEditing(false);
   };
+
+  const handleUpdate = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.put(`https://striking-illumination-production.up.railway.app/users/update/${userDataSql.id}`, {
+        ...data
+      });
+      console.log(res.data, 'res.data');
+      if (res.status === 200) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Profile updated successfully!',
+        })
+      }
+      localStorage.setItem('userSql', JSON.stringify(res?.data?.data));
+    } catch (error: Error | any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error.message,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
   
   return (
     <div className='w-full min-h-screen flex flex-col items-center justify-center gap-1'>
@@ -31,7 +61,11 @@ const ProfilePage = () => {
           {/* <input disabled value={userDataSql?.email} /> */}
           <input disabled value={userDataSql?.email} type="search" id="default-search" className="cursor-not-allowed block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
         </div>
-        {isEditing && <button type="button" className="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900">Update</button>}
+        {isEditing && <button type="button" className="focus:outline-none justify-center text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900"
+        onClick={handleUpdate}
+        >
+        {loading ? <Spinner /> : 'Update'}
+          </button>}
       </div>
     </div>
   )

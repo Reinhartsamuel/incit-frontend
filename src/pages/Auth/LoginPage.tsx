@@ -58,7 +58,6 @@ const LoginPage = () => {
 
       await updateUserData(userSql);
     } catch (error: any) {
-      window.alert(error.message);
       Swal.fire({
         icon: 'error',
         title: 'Error!',
