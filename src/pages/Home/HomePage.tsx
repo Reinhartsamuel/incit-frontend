@@ -101,7 +101,7 @@ const HomePage = () => {
           }
           alt='Rounded avatar'
         />
-        <h1 className='text-5xl font-bold'>
+        <h1 className='text-5xl font-bold text-center'>
           Hello, {auth.currentUser?.displayName || auth.currentUser?.email}
         </h1>
         <div className='flex flex-col items-center lg:flex-row gap-4'>

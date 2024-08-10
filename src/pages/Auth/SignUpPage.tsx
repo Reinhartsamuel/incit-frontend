@@ -49,7 +49,7 @@ const SignUpPage = () => {
       const idToken = await userCredential.user.getIdToken(true);
       
       const results = await Promise.all([
-        await axios.post('http://localhost:3000/users/create', {
+        await axios.post('https://striking-illumination-production.up.railway.app/users/create', {
           first_name: info.first_name,
           last_name: info.last_name,
           email: info.email,
@@ -57,7 +57,7 @@ const SignUpPage = () => {
           email_verified: false,
           number_of_login: 1,
         }),
-        await axios.post('http://localhost:3000/users/generate-token', {
+        await axios.post('https://striking-illumination-production.up.railway.app/users/generate-token', {
           token: idToken,
           email: info.email,
           name: `${info.first_name} ${info.last_name}`,
